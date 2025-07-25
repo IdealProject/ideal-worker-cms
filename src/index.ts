@@ -39,7 +39,16 @@ export default {
 				}
 
 				fileName = file.name;
-				content = await file.text();
+				const arrayBuffer = await file.arrayBuffer();
+				const uint8Array = new Uint8Array(arrayBuffer);
+				function uint8ToBase64(bytes: Uint8Array): string {
+					let binary = '';
+					for (let i = 0; i < bytes.length; i++) {
+						binary += String.fromCharCode(bytes[i]);
+					}
+					return btoa(binary);
+				}
+				content = uint8ToBase64(uint8Array);
 			}
 
 			// proceso de creación de pr
@@ -51,7 +60,7 @@ export default {
 			});
 
 			// 2. Crear un nuevo Branch (basado en main)
-			const branchName = `editor-${Date.now()}`;
+			const branchName = `editor-${fileName}`;
 			await octokit.rest.git.createRef({
 				owner: env.GITHUB_OWNER,
 				repo: env.GITHUB_REPO,
@@ -65,7 +74,7 @@ export default {
 				repo: env.GITHUB_REPO,
 				path: `src/content/posts/${fileName}`,
 				message: `Nuevo post desde worker: ${fileName}`,
-				content: btoa(content), // Codificar en base64
+				content: content,
 				branch: branchName,
 			});
 
