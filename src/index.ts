@@ -23,13 +23,23 @@ export default {
 			// Creamos una instancia autenticada de la app para con la instalación de la github app que vamos a usar
 			const octokit = await app.getInstallationOctokit(env.INSTALLATION_ID);
 
-
 			// empezamos a trabajar con los datos que llegan 
-			const { fileName, content } = await request.json();
+			const contentType = request.headers.get("content-type");
 
-			// validamos que sea un mdoc
-			if (!fileName.endsWith(".mdoc")) {
-				return new Response("El archivo debe ser .mdoc", { status: 400 });
+			let fileName: string;
+			let content: string;
+
+			if (contentType?.includes("multipart/form-data")) {
+				// Manejo de archivos subidos via FormData
+				const formData = await request.formData();
+				const file = formData.get("file") as File;
+
+				if (!file) {
+					return new Response("No se encontró archivo", { status: 400 });
+				}
+
+				fileName = file.name;
+				content = await file.text();
 			}
 
 			// proceso de creación de pr
@@ -49,7 +59,7 @@ export default {
 				sha: baseSha,
 			});
 			// 3. Subir el archivo a /src/content/posts/
-			
+
 			await octokit.rest.repos.createOrUpdateFileContents({
 				owner: env.GITHUB_OWNER,
 				repo: env.GITHUB_REPO,

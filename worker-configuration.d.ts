@@ -5,7 +5,9 @@ declare namespace Cloudflare {
 	interface Env {
 	}
 }
-interface Env extends Cloudflare.Env {}
+interface Env extends Cloudflare.Env {
+	INSTALLATION_ID(INSTALLATION_ID: any): unknown;
+}
 
 // Begin runtime types
 /*! *****************************************************************************
